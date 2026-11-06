@@ -1,9 +1,12 @@
 
 import { useState } from 'react'
+import TaskForm from './components/TaskForm'
 import './App.css'
 
 function App() {
   // Initial tasks
+  const [editingTask, setEditingTask] = useState(null)
+  
   const [tasks, setTasks] = useState([
     {
       id: 1,
@@ -29,27 +32,31 @@ function App() {
   ])
 
   // Input and filter states
-  const [newTask, setNewTask] = useState('')
+ 
   const [activeFilter, setActiveFilter] = useState('All')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortBy, setSortBy] = useState('default')
 
   // Add a new task
-  const addTask = (e) => {
-    e.preventDefault()
-
-    if (!newTask.trim()) return
-
-    const task = {
-      id: Date.now(),
-      title: newTask.trim(),
-      category: 'General',
-      priority: 'Medium',
-      completed: false,
-    }
-
-    setTasks((previousTasks) => [...previousTasks, task])
-    setNewTask('')
+  const addTask = (taskData) => {
+  const task = {
+    ...taskData,
+    id: Date.now(),
+    completed: false,
   }
 
+  setTasks((previousTasks) => [...previousTasks, task])
+}
+// Update an existing task
+const updateTask = (id, updatedData) => {
+  setTasks((previousTasks) =>
+    previousTasks.map((task) =>
+      task.id === id ? { ...task, ...updatedData } : task
+    )
+  )
+
+  setEditingTask(null)
+}
   // Mark task as completed or pending
   const toggleTask = (id) => {
     setTasks((previousTasks) =>
@@ -69,11 +76,41 @@ function App() {
   }
 
   // Filter tasks
-  const filteredTasks = tasks.filter((task) => {
-    if (activeFilter === 'Pending') return !task.completed
-    if (activeFilter === 'Completed') return task.completed
-    return true
-  })
+ // Filter and search tasks
+const filteredTasks = tasks.filter((task) => {
+  const matchesFilter =
+    activeFilter === 'All' ||
+    (activeFilter === 'Pending' && !task.completed) ||
+    (activeFilter === 'Completed' && task.completed)
+
+  const matchesSearch = task.title
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase())
+
+  return matchesFilter && matchesSearch
+})
+
+// Sort filtered tasks
+const sortedTasks = [...filteredTasks].sort((a, b) => {
+  if (sortBy === 'priority') {
+    const priorityOrder = {
+      High: 1,
+      Medium: 2,
+      Low: 3,
+    }
+
+    return priorityOrder[a.priority] - priorityOrder[b.priority]
+  }
+
+  if (sortBy === 'dueDate') {
+    if (!a.dueDate) return 1
+    if (!b.dueDate) return -1
+
+    return new Date(a.dueDate) - new Date(b.dueDate)
+  }
+
+  return 0
+})
 
   // Dashboard statistics
   const totalTasks = tasks.length
@@ -191,16 +228,36 @@ function App() {
           </div>
 
           {/* Add task form */}
-          <form className="task-form" onSubmit={addTask}>
-            <input
-              type="text"
-              placeholder="What do you need to accomplish?"
-              value={newTask}
-              onChange={(e) => setNewTask(e.target.value)}
-            />
-            <button type="submit">+ Add Task</button>
-          </form>
+        <TaskForm
+  onAddTask={addTask}
+  editingTask={editingTask}
+  onUpdateTask={updateTask}
+  onCancelEdit={() => setEditingTask(null)}
+/>
+{/* Search tasks */}
+<div className="search-container">
+  <input
+    type="text"
+    placeholder="🔍 Search tasks..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+  />
+</div>
 
+{/* Sort tasks */}
+<div className="sort-container">
+  <label htmlFor="sortTasks">Sort by:</label>
+
+  <select
+    id="sortTasks"
+    value={sortBy}
+    onChange={(e) => setSortBy(e.target.value)}
+  >
+    <option value="default">Default Order</option>
+    <option value="priority">Priority: High to Low</option>
+    <option value="dueDate">Due Date: Earliest First</option>
+  </select>
+</div>
           {/* Filters */}
           <div className="filter-tabs">
             {['All', 'Pending', 'Completed'].map((filter) => (
@@ -226,7 +283,7 @@ function App() {
                 <p>Add a new task or select another filter.</p>
               </div>
             ) : (
-              filteredTasks.map((task) => (
+              sortedTasks.map((task) => (
                 <div
                   className={`task-card ${task.completed ? 'completed' : ''}`}
                   key={task.id}
@@ -239,30 +296,57 @@ function App() {
                   >
                     {task.completed ? '✓' : ''}
                   </button>
+	
 
                   <div className="task-details">
-                    <h3>{task.title}</h3>
-                    <div className="task-meta">
-                      <span>{task.category}</span>
-                      <span className={`priority ${task.priority.toLowerCase()}`}>
-                        {task.priority} Priority
-                      </span>
-                    </div>
-                  </div>
+  <h3>{task.title}</h3>
 
-                  <span className="task-status">
-                    {task.completed ? 'Completed' : 'Pending'}
-                  </span>
+  {task.description && (
+    <p className="task-description">
+      {task.description}
+    </p>
+  )}
 
-                  <button
-                    className="delete-btn"
-                    onClick={() => deleteTask(task.id)}
-                    type="button"
-                    aria-label="Delete task"
-                    title="Delete task"
-                  >
-                    ×
-                  </button>
+  <div className="task-meta">
+    <span>{task.category}</span>
+
+    <span className={`priority ${task.priority.toLowerCase()}`}>
+      {task.priority} Priority
+    </span>
+
+    {task.dueDate && (
+      <span className="task-due-date">
+        Due: {task.dueDate}
+      </span>
+    )}
+  </div>
+</div>
+
+                 
+<span className="task-status">
+  {task.completed ? 'Completed' : 'Pending'}
+</span>
+
+<button
+  className="edit-btn"
+  onClick={() => setEditingTask(task)}
+  type="button"
+  aria-label="Edit task"
+  title="Edit task"
+>
+  ✎
+</button>
+
+<button
+  className="delete-btn"
+  onClick={() => deleteTask(task.id)}
+  type="button"
+  aria-label="Delete task"
+  title="Delete task"
+>
+  ×
+</button>
+
                 </div>
               ))
             )}

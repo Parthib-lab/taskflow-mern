@@ -22,3 +22,23 @@ button,
 input {
   font-family: inherit;
 }
+
+
+.search-container {
+  margin: 24px 0 16px;
+}
+
+.search-container input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  outline: none;
+  font-size: 14px;
+  background: #ffffff;
+}
+
+.search-container input:focus {
+  border-color: #7057e8;
+  box-shadow: 0 0 0 3px rgba(112, 87, 232, 0.1);
+}
