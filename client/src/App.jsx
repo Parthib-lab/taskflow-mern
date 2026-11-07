@@ -2,34 +2,28 @@
 import { useState } from 'react'
 import TaskForm from './components/TaskForm'
 import './App.css'
+import { useEffect } from 'react'
+import API from './services/api'
 
 function App() {
   // Initial tasks
   const [editingTask, setEditingTask] = useState(null)
   
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      title: 'Complete JavaScript revision',
-      category: 'Study',
-      priority: 'High',
-      completed: false,
-    },
-    {
-      id: 2,
-      title: 'Practice 3 DSA problems',
-      category: 'Coding',
-      priority: 'Medium',
-      completed: false,
-    },
-    {
-      id: 3,
-      title: 'Read React documentation',
-      category: 'Development',
-      priority: 'Low',
-      completed: true,
-    },
-  ])
+ const [tasks, setTasks] = useState([])
+ // Fetch tasks from backend when dashboard loads
+useEffect(() => {
+  const fetchTasks = async () => {
+    try {
+      const response = await API.get('/tasks')
+
+      setTasks(response.data.data)
+    } catch (error) {
+      console.error('Error fetching tasks:', error)
+    }
+  }
+
+  fetchTasks()
+}, [])
 
   // Input and filter states
  
@@ -38,42 +32,79 @@ function App() {
   const [sortBy, setSortBy] = useState('default')
 
   // Add a new task
-  const addTask = (taskData) => {
-  const task = {
-    ...taskData,
-    id: Date.now(),
-    completed: false,
-  }
+  // Add a new task to MongoDB
+const addTask = async (taskData) => {
+  try {
+    const response = await API.post('/tasks', taskData)
 
-  setTasks((previousTasks) => [...previousTasks, task])
+    const newTask = response.data.data
+
+    setTasks((previousTasks) => [...previousTasks, newTask])
+
+  } catch (error) {
+    console.error('Error adding task:', error)
+    alert('Failed to add task. Please try again.')
+  }
 }
 // Update an existing task
-const updateTask = (id, updatedData) => {
-  setTasks((previousTasks) =>
-    previousTasks.map((task) =>
-      task.id === id ? { ...task, ...updatedData } : task
-    )
-  )
+// Update an existing task in MongoDB
+const updateTask = async (id, updatedData) => {
+  try {
+    const response = await API.put(`/tasks/${id}`, updatedData)
 
-  setEditingTask(null)
-}
-  // Mark task as completed or pending
-  const toggleTask = (id) => {
+    const updatedTask = response.data.data
+
     setTasks((previousTasks) =>
       previousTasks.map((task) =>
-        task.id === id
-          ? { ...task, completed: !task.completed }
-          : task
+        task._id === updatedTask._id ? updatedTask : task
       )
     )
+
+    setEditingTask(null)
+
+  } catch (error) {
+    console.error('Error updating task:', error)
+    alert('Failed to update task. Please try again.')
   }
+}
+  // Mark task as completed or pending
+ const toggleTask = async (id) => {
+  try {
+    const task = tasks.find((task) => task._id === id)
+
+    if (!task) return
+
+    const response = await API.put(`/tasks/${id}`, {
+      completed: !task.completed,
+    })
+
+    const updatedTask = response.data.data
+
+    setTasks((previousTasks) =>
+      previousTasks.map((task) =>
+        task._id === updatedTask._id ? updatedTask : task
+      )
+    )
+  } catch (error) {
+    console.error('Error updating task status:', error)
+    alert('Failed to update task status.')
+  }
+}
 
   // Delete a task
-  const deleteTask = (id) => {
+ // Delete a task from MongoDB
+const deleteTask = async (id) => {
+  try {
+    await API.delete(`/tasks/${id}`)
+
     setTasks((previousTasks) =>
-      previousTasks.filter((task) => task.id !== id)
+      previousTasks.filter((task) => task._id !== id)
     )
+  } catch (error) {
+    console.error('Error deleting task:', error)
+    alert('Failed to delete task. Please try again.')
   }
+}
 
   // Filter tasks
  // Filter and search tasks
@@ -286,11 +317,11 @@ const sortedTasks = [...filteredTasks].sort((a, b) => {
               sortedTasks.map((task) => (
                 <div
                   className={`task-card ${task.completed ? 'completed' : ''}`}
-                  key={task.id}
+                  key={task._id}
                 >
                   <button
                     className={`task-checkbox ${task.completed ? 'checked' : ''}`}
-                    onClick={() => toggleTask(task.id)}
+                    onClick={() => toggleTask(task._id)}
                     type="button"
                     aria-label="Toggle task completion"
                   >
@@ -339,7 +370,7 @@ const sortedTasks = [...filteredTasks].sort((a, b) => {
 
 <button
   className="delete-btn"
-  onClick={() => deleteTask(task.id)}
+  onClick={() => deleteTask(task._id)}
   type="button"
   aria-label="Delete task"
   title="Delete task"

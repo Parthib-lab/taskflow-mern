@@ -40,12 +40,11 @@ const handleSubmit = (e) => {
     dueDate,
   }
 
-  if (editingTask) {
-    onUpdateTask(editingTask.id, taskData)
-  } else {
-    onAddTask(taskData)
-  }
-
+if (editingTask) {
+  onUpdateTask(editingTask._id, taskData)
+} else {
+  onAddTask(taskData)
+}
   if (!editingTask) {
     setTitle('')
     setDescription('')
