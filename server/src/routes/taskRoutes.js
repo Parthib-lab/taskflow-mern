@@ -1,11 +1,14 @@
 const Task = require('../models/Task')
 const express = require('express')
+const authMiddleware = require('../middleware/authMiddleware')
 
 const router = express.Router()
 
-// Temporary sample tasks
+// Apply authentication to all task routes
+router.use(authMiddleware)
 
 
+// POST - Create a new task
 router.post('/', async (req, res) => {
   try {
     const {
@@ -29,6 +32,7 @@ router.post('/', async (req, res) => {
       category: category || 'Study',
       priority: priority || 'Medium',
       dueDate: dueDate || '',
+      user: req.user.id,
     })
 
     res.status(201).json({
@@ -44,11 +48,14 @@ router.post('/', async (req, res) => {
     })
   }
 })
-// GET all tasks
-// GET - Fetch all tasks from MongoDB
+
+
+// GET - Fetch only logged-in user's tasks
 router.get('/', async (req, res) => {
   try {
-    const tasks = await Task.find()
+    const tasks = await Task.find({
+      user: req.user.id,
+    })
 
     res.status(200).json({
       success: true,
@@ -65,20 +72,23 @@ router.get('/', async (req, res) => {
 })
 
 
-
-
-// PUT - Update an existing task
-// PUT - Update an existing task in MongoDB
+// PUT - Update only logged-in user's task
 router.put('/:id', async (req, res) => {
   try {
-   const updatedTask = await Task.findByIdAndUpdate(
-  req.params.id,
-  req.body,
-  {
-    returnDocument: 'after',
-    runValidators: true,
-  }
-)
+    // Do not allow changing task ownership
+    const { user, ...updatedData } = req.body
+
+    const updatedTask = await Task.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        user: req.user.id,
+      },
+      updatedData,
+      {
+        returnDocument: 'after',
+        runValidators: true,
+      }
+    )
 
     if (!updatedTask) {
       return res.status(404).json({
@@ -102,13 +112,13 @@ router.put('/:id', async (req, res) => {
 })
 
 
-// DELETE - Remove an existing task
-// DELETE - Remove an existing task from MongoDB
+// DELETE - Delete only logged-in user's task
 router.delete('/:id', async (req, res) => {
   try {
-    const deletedTask = await Task.findByIdAndDelete(
-      req.params.id
-    )
+    const deletedTask = await Task.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.id,
+    })
 
     if (!deletedTask) {
       return res.status(404).json({
@@ -130,4 +140,5 @@ router.delete('/:id', async (req, res) => {
     })
   }
 })
+
 module.exports = router

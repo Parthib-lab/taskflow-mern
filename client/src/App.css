@@ -748,3 +748,130 @@
 .sort-container select:focus {
   border-color: #7057e8;
 }
+
+
+/* ================================
+   LOGIN & REGISTRATION DESIGN
+================================ */
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 25px;
+  background: linear-gradient(135deg, #667eea, #764ba2, #6b8dd6);
+}
+
+/* Authentication Card */
+.auth-form {
+  width: 100%;
+  max-width: 430px;
+  padding: 40px 35px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(25, 20, 60, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  animation: authFadeIn 0.5s ease;
+}
+
+/* Heading */
+.auth-form h1 {
+  color: #252b55;
+  font-size: 30px;
+  text-align: center;
+  margin: 0;
+  font-weight: 750;
+}
+
+.auth-form > p {
+  color: #777b91;
+  text-align: center;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Input Fields */
+.auth-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid #dfe3f0;
+  border-radius: 10px;
+  outline: none;
+  font-size: 15px;
+  background: #f8f9ff;
+  color: #252b55;
+  transition: 0.3s;
+}
+
+.auth-form input:focus {
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+/* Login / Register Button */
+.auth-form button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.auth-form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+}
+
+/* Register / Login Link */
+.auth-form a {
+  color: #667eea;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-form a:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+/* Error Message */
+.auth-form .error-message {
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+/* Animation */
+@keyframes authFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .auth-form {
+    padding: 30px 22px;
+  }
+
+  .auth-form h1 {
+    font-size: 25px;
+  }
+}

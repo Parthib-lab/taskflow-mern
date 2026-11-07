@@ -11,6 +11,11 @@ app.use(express.json())
 // Task API routes
 app.use('/api/tasks', taskRoutes)
 
+// Add these two lines
+const authRoutes = require('./routes/authRoutes')
+app.use('/api/auth', authRoutes)
+
+
 // Test route
 app.get('/', (req, res) => {
   res.send('TaskFlow Backend is Running!')

@@ -26,8 +26,16 @@ const taskSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+   // ADD THE NEW USER FIELD HERE
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
 })
 
 const Task = mongoose.model('Task', taskSchema)
+
+
 
 module.exports = Task
